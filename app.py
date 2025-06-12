@@ -23,7 +23,6 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 def allowed_file(filename):
-    """Checks if the file extension is allowed."""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # --- Static File Serving & Routes ---
@@ -61,32 +60,24 @@ def signup():
         return jsonify({"error": "Username and password are required."}), 400
     if 'ref_photo' not in request.files:
         return jsonify({"error": "A reference photo is required for signup."}), 400
-
     username = request.form['username']
     password = request.form['password']
     ref_photo = request.files['ref_photo']
-
     if not (username and password and ref_photo and allowed_file(ref_photo.filename)):
         return jsonify({"error": "Invalid form data or file type."}), 400
-
     filename = secure_filename(ref_photo.filename)
     unique_name = f"{uuid.uuid4()}_{filename}"
     local_path = os.path.join(UPLOAD_FOLDER, unique_name)
     ref_photo.save(local_path)
-
     r2_path = f"user_profiles/{username}/{unique_name}"
     upload_success, public_url = upload_to_r2(local_path, r2_path)
     os.remove(local_path)
-
     if not upload_success:
         return jsonify({"error": "Could not save reference photo."}), 500
-
     success, message = add_user(username, password, role="attendee", ref_photo_path=r2_path)
-
     if not success:
         delete_from_r2(r2_path)
         return jsonify({"error": message}), 409
-
     return jsonify({"message": "User registered successfully!"}), 201
 
 @app.route('/api/auth/verify', methods=['GET'])
@@ -151,12 +142,10 @@ def upload_single_file_route():
             return jsonify({"error": "Only photographers can upload photos."}), 403
     except Exception as e:
         return jsonify({"error": "Authentication failed", "details": str(e)}), 401
-
     if 'file' not in request.files: return jsonify({"error": "No file part"}), 400
     file_to_upload = request.files['file']
     album_id = request.form.get('album')
     if not album_id: return jsonify({"error": "Album ID is missing"}), 400
-
     if file_to_upload and allowed_file(file_to_upload.filename):
         original_filename = secure_filename(file_to_upload.filename)
         unique_name = f"{uuid.uuid4()}_{original_filename}"
@@ -227,21 +216,33 @@ def find_my_photos(photographer_username, album_id):
         
         ref_photo_url = get_object_url(attendee['ref_photo_path'])
         
-        embedding_file_name = f"{photographer_username}/{album_id}_embeddings.json"
-        api_endpoint = f"{ML_API_BASE_URL}/find_similar_faces_by_url/"
+        # Download the reference photo from R2 into memory
+        response = requests.get(ref_photo_url)
+        response.raise_for_status()  # Will raise an error for bad status codes
+        ref_photo_bytes = response.content
         
-        payload = {
-            "url": ref_photo_url,
+        # Use a consistent, safe filename format for the embeddings file
+        embedding_file_name = f"{photographer_username}-{album_id}_embeddings.json"
+        
+        # This is the ML service endpoint that expects a file upload
+        api_endpoint = f"{ML_API_BASE_URL}find_similar_faces/"
+        
+        # Prepare the multipart/form-data payload
+        files_payload = {
+            "file": ("reference_image.jpg", ref_photo_bytes, "image/jpeg")
+        }
+        data_payload = {
             "embedding_file": embedding_file_name
         }
         
-        response = requests.post(api_endpoint, json=payload, timeout=60)
-        response.raise_for_status()
+        # Call the ML service with the file data
+        ml_response = requests.post(api_endpoint, files=files_payload, data=data_payload, timeout=60)
+        ml_response.raise_for_status()
         
-        return jsonify(response.json()), response.status_code
+        return jsonify(ml_response.json()), ml_response.status_code
 
     except requests.exceptions.RequestException as e:
-        return jsonify({"error": "Failed to connect to ML service.", "details": str(e)}), 503
+        return jsonify({"error": "Failed to connect to ML service or download reference photo.", "details": str(e)}), 503
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": "An internal error occurred while finding matches.", "details": str(e)}), 500
