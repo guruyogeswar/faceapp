@@ -8,8 +8,23 @@
         "yogi": {
             "password": "yogi123",
             "role": "attendee",
-            "ref_photo_path": "user_profiles/yogi/32100c13-847a-459a-a7ee-d6bc6fb03535_PERSON1_8.jpg"
+            "ref_photo_path": "user_profiles/yogi/997780ea-e979-4885-80c7-1e7da0a28b41_PERSON1_2.jpg"
         }
     },
-    "albums": {}
+    "albums": {
+        "demo": {
+            "modi-ji": {
+                "name": "modi ji",
+                "photos": []
+            },
+            "testing": {
+                "name": "Testing",
+                "photos": []
+            },
+            "test2": {
+                "name": "test2",
+                "photos": []
+            }
+        }
+    }
 }

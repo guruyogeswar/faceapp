@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const album = urlParams.get('album');
 
     if (!photographer || !album) {
-        loadingState.innerHTML = '<p class="text-red-500 text-center">Error: Invalid event link.</p>';
+        loadingState.innerHTML = '<p class="text-red-500 text-center">Error: Invalid event link. Photographer or album information is missing.</p>';
         return;
     }
 
@@ -54,32 +54,49 @@ document.addEventListener('DOMContentLoaded', async () => {
         photos.forEach(photo => {
             const photoCard = document.createElement('div');
             photoCard.className = 'aspect-square bg-gray-200 rounded-lg overflow-hidden group relative';
-            photoCard.innerHTML = `<img src="${photo.url}" alt="${photo.name}" class="w-full h-full object-cover" loading="lazy">`;
+            const scoreHtml = photo.score ? `<div class="absolute top-1.5 right-1.5 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-full">${Math.round(photo.score * 100)}%</div>` : '';
+            photoCard.innerHTML = `
+                <img src="${photo.url}" alt="${photo.name}" class="w-full h-full object-cover" loading="lazy">
+                ${scoreHtml}
+            `;
             gridElement.appendChild(photoCard);
         });
     };
 
     const fetchAndDisplayAllPhotos = async (token) => {
         try {
+            allPhotosGrid.innerHTML = `<div class="col-span-full text-center py-10"><div class="spinner"></div></div>`;
+            
             const response = await fetch(`/api/event/${photographer}/${album}`, { headers: { 'Authorization': `Bearer ${token}` } });
-            if (!response.ok) throw new Error("Could not fetch event photos.");
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Could not fetch event photos.");
+            }
+
             const photos = await response.json();
             renderPhotos(allPhotosGrid, photos, "This album has no photos yet.");
+
         } catch (error) {
+            console.error("Error fetching all photos:", error);
             allPhotosGrid.innerHTML = `<p class="col-span-full text-red-500 text-center py-10">${error.message}</p>`;
         }
     };
 
     const fetchAndDisplayMyPhotos = async (token) => {
-        myPhotosView.innerHTML = ''; // Clear "Searching..." message
+        myPhotosView.innerHTML = ''; 
         myPhotosView.appendChild(myPhotosGrid);
         myPhotosGrid.innerHTML = `<div class="col-span-full text-center py-10"><div class="spinner"></div><p class="mt-2">Finding your photos...</p></div>`;
         try {
             const response = await fetch(`/api/find-my-photos/${photographer}/${album}`, { headers: { 'Authorization': `Bearer ${token}` } });
-            if (!response.ok) throw new Error("Could not find your photos.");
+            if (!response.ok) {
+                 const errorData = await response.json();
+                throw new Error(errorData.error || "Could not find your photos.");
+            }
             const result = await response.json();
             renderPhotos(myPhotosGrid, result.matches, "No photos featuring you were found in this album.");
         } catch (error) {
+            console.error("Error fetching my photos:", error);
             myPhotosGrid.innerHTML = `<p class="col-span-full text-red-500 text-center py-10">${error.message}</p>`;
         }
     };
@@ -104,7 +121,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         eventGallery.style.display = 'block';
         activateTab(allPhotosTab); // Default to showing all photos first
         
-        // Fetch for both tabs
+        // Fetch photos for both tabs
         fetchAndDisplayAllPhotos(token);
         fetchAndDisplayMyPhotos(token);
     }

@@ -1,5 +1,3 @@
-// js/albums.js (Full Code)
-
 document.addEventListener('DOMContentLoaded', async () => {
     const DOMElements = {
         loginBtnNav: document.getElementById('loginBtnNav'),
@@ -24,7 +22,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         navTabButtons: document.querySelectorAll('.nav-tab-button'),
         viewContainer: document.getElementById('view-container'),
         manageAlbumsView: document.getElementById('manage-albums-view'),
-        findImagesView: document.getElementById('find-images-view'),
         albumDetailView: document.getElementById('album-detail-view'),
         createAlbumBtn: document.getElementById('createAlbumBtn'),
         createAlbumFormContainer: document.getElementById('createAlbumFormContainer'),
@@ -34,18 +31,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         albumGrid: document.getElementById('album-grid'),
         albumGridLoader: document.getElementById('album-grid-loader'),
         noAlbumsMessage: document.getElementById('no-albums-message'),
-        faceSearchForm: document.getElementById('faceSearchForm'),
-        searchAlbumSelect: document.getElementById('searchAlbumSelect'),
-        faceSearchFileInput: document.getElementById('faceSearchFile'),
-        searchResultsGrid: document.getElementById('search-results-grid'),
-        searchResultsLoader: document.getElementById('search-results-loader'),
-        noMatchesMessage: document.getElementById('no-matches-message'),
-        searchStatusMessage: document.getElementById('search-status-message'),
-        photoGrid: null, 
-        photoGridLoader: null, 
-        noPhotosMessage: null, 
-        photoActionBar: null, 
-        selectionCountSpan: null, 
+        photoGrid: null,
+        photoGridLoader: null,
+        noPhotosMessage: null,
+        photoActionBar: null,
+        selectionCountSpan: null,
         lightboxModal: document.getElementById('lightbox-modal'),
         lightboxImage: document.getElementById('lightbox-image'),
         lightboxCaption: document.getElementById('lightbox-caption'),
@@ -61,40 +51,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         copyShareLinkBtn: document.getElementById('copy-share-link-btn'),
     };
 
-    let currentUser = null; 
+    let currentUser = null;
     let currentAlbums = [];
-    let currentAlbumPhotos = []; 
-    let selectedPhotos = new Set(); 
+    let currentAlbumPhotos = [];
+    let selectedPhotos = new Set();
     let lightboxCurrentIndex = -1;
 
-    const API_BASE_URL = ''; 
-    const ML_API_BASE_URL = 'https://facerecognition-app-47922655580.asia-south1.run.app/';
+    const API_BASE_URL = '';
+    const ML_API_BASE_URL = 'https://facerecognitionphotography-app-200111791636.asia-south1.run.app/';
 
-    function showToast(message, type = 'info') { 
+    function showToast(message, type = 'info') {
         if (!DOMElements.toastContainer) return;
         const toast = document.createElement('div');
         toast.className = `toast toast-${type} show`;
         toast.innerHTML = `<span class="toast-message">${message}</span><button class="toast-close">&times;</button>`;
         DOMElements.toastContainer.appendChild(toast);
-        const autoDismiss = setTimeout(() => toast.remove(), 5000);
+        const autoDismiss = setTimeout(() => {
+            toast.remove();
+        }, 5000);
         toast.querySelector('.toast-close').addEventListener('click', () => {
             clearTimeout(autoDismiss);
             toast.remove();
         });
     }
-    
+
     function updateUserNav(isLoggedIn, userData = null) {
         currentUser = isLoggedIn ? userData : null;
         const display = isLoggedIn ? 'none' : 'block';
         const profileDisplay = isLoggedIn ? 'block' : 'none';
-        [DOMElements.loginBtnNav, DOMElements.signinBtnNav, DOMElements.loginBtnNavMobile, DOMElements.signinBtnNavMobile].forEach(el => el.style.display = display);
-        [DOMElements.profileDropdownContainer, DOMElements.profileContainerMobile].forEach(el => el.style.display = profileDisplay);
-        if(isLoggedIn && userData) {
+        [DOMElements.loginBtnNav, DOMElements.signinBtnNav, DOMElements.loginBtnNavMobile, DOMElements.signinBtnNavMobile].forEach(el => {
+            if (el) el.style.display = display;
+        });
+        [DOMElements.profileDropdownContainer, DOMElements.profileContainerMobile].forEach(el => {
+            if (el) el.style.display = profileDisplay;
+        });
+        if (isLoggedIn && userData) {
             const initials = userData.username.charAt(0).toUpperCase();
-            [DOMElements.profileInitials, DOMElements.dropdownProfileInitials, DOMElements.profileInitialsMobile].forEach(el => el.textContent = initials);
-            [DOMElements.dropdownUserName, DOMElements.userNameMobile].forEach(el => el.textContent = userData.username);
-            DOMElements.dropdownUserEmail.textContent = userData.email || `${userData.username}@example.com`;
-            DOMElements.userEmailMobile.textContent = userData.email || `${userData.username}@example.com`;
+            [DOMElements.profileInitials, DOMElements.dropdownProfileInitials, DOMElements.profileInitialsMobile].forEach(el => {
+                if (el) el.textContent = initials;
+            });
+            [DOMElements.dropdownUserName, DOMElements.userNameMobile].forEach(el => {
+                if (el) el.textContent = userData.username;
+            });
+            if (DOMElements.dropdownUserEmail) DOMElements.dropdownUserEmail.textContent = userData.email || `${userData.username}@example.com`;
+            if (DOMElements.userEmailMobile) DOMElements.userEmailMobile.textContent = userData.email || `${userData.username}@example.com`;
         }
     }
 
@@ -102,51 +102,73 @@ document.addEventListener('DOMContentLoaded', async () => {
         const token = localStorage.getItem('authToken');
         if (!token) {
             updateUserNav(false);
-            DOMElements.loginPromptDiv.style.display = 'block';
-            DOMElements.albumsMainContentDiv.style.display = 'none';
+            if (DOMElements.loginPromptDiv) DOMElements.loginPromptDiv.style.display = 'block';
+            if (DOMElements.albumsMainContentDiv) DOMElements.albumsMainContentDiv.style.display = 'none';
             return false;
         }
         try {
-            const response = await fetch('/api/auth/verify', { headers: { 'Authorization': `Bearer ${token}` } });
+            const response = await fetch('/api/auth/verify', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             if (!response.ok) throw new Error('Session expired');
             const data = await response.json();
-            updateUserNav(true, { username: data.username });
-            DOMElements.loginPromptDiv.style.display = 'none';
-            DOMElements.albumsMainContentDiv.style.display = 'block';
+            updateUserNav(true, {
+                username: data.username
+            });
+            if (DOMElements.loginPromptDiv) DOMElements.loginPromptDiv.style.display = 'none';
+            if (DOMElements.albumsMainContentDiv) DOMElements.albumsMainContentDiv.style.display = 'block';
             return true;
         } catch (error) {
             localStorage.removeItem('authToken');
+            localStorage.removeItem('username');
             updateUserNav(false);
             return false;
         }
     }
 
     function switchView(viewId) {
-        Object.values(DOMElements.viewContainer.children).forEach(child => child.style.display = 'none');
-        document.getElementById(viewId).style.display = 'block';
-        DOMElements.navTabButtons.forEach(btn => {
-            btn.classList.toggle('active-tab', btn.dataset.view === viewId.replace('-view', ''));
-        });
+        if (DOMElements.viewContainer) {
+            Array.from(DOMElements.viewContainer.children).forEach(child => {
+                child.style.display = 'none'
+            });
+        }
+        const activeSection = document.getElementById(viewId);
+        if (activeSection) {
+            activeSection.style.display = 'block';
+        }
     }
-    
+
     async function fetchUserAlbums() {
         const token = localStorage.getItem('authToken');
-        DOMElements.albumGridLoader.style.display = 'grid';
+        if (DOMElements.albumGridLoader) DOMElements.albumGridLoader.style.display = 'grid';
         try {
-            const response = await fetch('/api/albums', { headers: { 'Authorization': `Bearer ${token}` } });
+            const response = await fetch('/api/albums', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             if (!response.ok) throw new Error('Failed to fetch albums');
             currentAlbums = await response.json();
             displayAlbums(currentAlbums);
         } catch (error) {
             showToast(error.message, 'error');
         } finally {
-            DOMElements.albumGridLoader.style.display = 'none';
+            if (DOMElements.albumGridLoader) DOMElements.albumGridLoader.style.display = 'none';
         }
     }
 
     function displayAlbums(albums) {
+        if (!DOMElements.albumGrid || !DOMElements.noAlbumsMessage) return;
+
         DOMElements.albumGrid.innerHTML = '';
-        DOMElements.noAlbumsMessage.style.display = (!albums || albums.length === 0) ? 'block' : 'none';
+        const hasAlbums = albums && albums.length > 0;
+        DOMElements.noAlbumsMessage.style.display = hasAlbums ? 'none' : 'block';
+        DOMElements.albumGrid.style.display = hasAlbums ? 'grid' : 'none';
+
+        if (!hasAlbums) return;
+
         albums.forEach(album => {
             const card = document.createElement('div');
             card.className = 'album-card-item bg-white rounded-xl shadow-lg overflow-hidden group';
@@ -196,57 +218,120 @@ document.addEventListener('DOMContentLoaded', async () => {
         DOMElements.photoGrid = DOMElements.albumDetailView.querySelector('#photo-grid');
         DOMElements.photoGridLoader = DOMElements.albumDetailView.querySelector('#photo-grid-loader');
         DOMElements.noPhotosMessage = DOMElements.albumDetailView.querySelector('#no-photos-message');
-        DOMElements.photoActionBar = DOMElements.albumDetailView.querySelector('#photo-action-bar');
-        DOMElements.selectionCountSpan = DOMElements.albumDetailView.querySelector('#selection-count');
     }
 
     async function fetchAndDisplayPhotos(albumId) {
-        DOMElements.photoGridLoader.style.display = 'grid';
-        DOMElements.photoGrid.style.display = 'none';
+        if (DOMElements.photoGridLoader) DOMElements.photoGridLoader.style.display = 'grid';
         try {
             const token = localStorage.getItem('authToken');
-            const response = await fetch(`/api/event/${currentUser.username}/${albumId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const username = currentUser ? currentUser.username : 'user';
+            const response = await fetch(`/api/event/${username}/${albumId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             if (!response.ok) throw new Error('Failed to fetch photos');
             currentAlbumPhotos = await response.json();
             displayPhotosInGrid(currentAlbumPhotos);
-        } catch(error) {
+        } catch (error) {
             showToast(error.message, 'error');
         } finally {
-            DOMElements.photoGridLoader.style.display = 'none';
-            DOMElements.photoGrid.style.display = 'grid';
+            if (DOMElements.photoGridLoader) DOMElements.photoGridLoader.style.display = 'none';
         }
     }
-    
+
     function displayPhotosInGrid(photos) {
+        if (!DOMElements.photoGrid || !DOMElements.noPhotosMessage) return;
         DOMElements.photoGrid.innerHTML = '';
-        DOMElements.noPhotosMessage.style.display = photos.length === 0 ? 'block' : 'none';
-        photos.forEach((photo, index) => {
+        const hasPhotos = photos && photos.length > 0;
+        DOMElements.noPhotosMessage.style.display = hasPhotos ? 'none' : 'block';
+        DOMElements.photoGrid.style.display = hasPhotos ? 'grid' : 'none';
+
+        if (!hasPhotos) return;
+
+        photos.forEach((photo) => {
             const photoItem = document.createElement('div');
-            photoItem.className = 'photo-item group ...'; // Using shorthand for brevity
-            photoItem.dataset.photoId = photo.id;
-            photoItem.innerHTML = `<img src="${photo.url}" class="w-full h-full object-cover"> ...`;
-            photoItem.addEventListener('click', e => { if(e.target.type !== 'checkbox') openLightbox(index); });
+            photoItem.className = 'photo-item group aspect-square bg-gray-200 rounded-lg overflow-hidden cursor-pointer';
+            photoItem.innerHTML = `<img src="${photo.url}" class="w-full h-full object-cover">`;
             DOMElements.photoGrid.appendChild(photoItem);
         });
     }
 
     async function handlePhotoUpload(files, albumId, albumName) {
-        showToast(`Uploading ${files.length} file(s)...`, 'info');
+        if (!files || files.length === 0) return;
+
         const token = localStorage.getItem('authToken');
-        for (const file of files) {
+        if (!token) {
+            showToast("You must be logged in to upload photos.", "error");
+            return;
+        }
+
+        const uploadButton = DOMElements.albumDetailView?.querySelector('#uploadToAlbumBtn');
+        if (uploadButton) {
+            uploadButton.disabled = true;
+            uploadButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i><span class="ml-2">Uploading 0/${files.length}...</span>`;
+        }
+
+        const uploadPromises = [];
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
             const formData = new FormData();
             formData.append('file', file);
             formData.append('album', albumId);
-            await fetch('/api/upload-single-file', { method: 'POST', body: formData, headers: { 'Authorization': `Bearer ${token}` } });
+            const promise = fetch('/api/upload-single-file', {
+                method: 'POST',
+                body: formData,
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).then(res => res.json());
+            uploadPromises.push(promise);
         }
-        showToast('Uploads complete. Processing faces...', 'info');
-        // Simplified face processing call for example
-        await fetch(`${ML_API_BASE_URL}/add_embeddings_from_urls/`, { method: 'POST' });
-        showToast('Processing complete!', 'success');
-        loadAlbumDetailView(albumId, albumName); // Refresh
+        
+        const results = await Promise.all(uploadPromises);
+        const successfulUrls = results.filter(r => r.success).map(r => r.url);
+        
+        if (uploadButton) {
+            uploadButton.innerHTML = `<i class="fas fa-check-circle"></i><span class="ml-2">Uploads Complete!</span>`;
+        }
+        showToast(`${successfulUrls.length} of ${files.length} photos uploaded.`, "success");
+
+        if (successfulUrls.length > 0) {
+            showToast(`Now processing faces... This may take a moment.`, "info");
+            if (uploadButton) {
+                uploadButton.innerHTML = `<i class="fas fa-brain"></i><span class="ml-2">Processing Faces...</span>`;
+            }
+
+            try {
+                const embedding_filename = `${currentUser.username}-${albumId}_embeddings.json`;
+                const mlPayload = new FormData();
+                successfulUrls.forEach(url => mlPayload.append('urls', url));
+                mlPayload.append('embedding_file', embedding_filename);
+                
+                const mlResponse = await fetch(`${ML_API_BASE_URL}add_embeddings_from_urls/`, {
+                    method: 'POST',
+                    body: mlPayload,
+                });
+
+                if (!mlResponse.ok) {
+                    const mlError = await mlResponse.json();
+                    throw new Error(mlError.detail || "Face processing on the ML server failed.");
+                }
+                
+                const mlResult = await mlResponse.json();
+                showToast(`Face processing complete! Added ${mlResult.added_count} new faces.`, "success");
+
+            } catch (error) {
+                console.error("Error during ML batch processing:", error);
+                showToast(`Face processing failed: ${error.message}`, "error");
+            }
+        }
+
+        if (uploadButton) {
+            uploadButton.disabled = false;
+            uploadButton.innerHTML = `<i class="fas fa-upload"></i><span class="ml-2">Upload Photos</span>`;
+        }
+        
+        loadAlbumDetailView(albumId, albumName);
     }
-    
-    function openLightbox(index) { /* ... lightbox logic ... */ }
 
     async function handleShareAlbumClick(albumId) {
         if (!currentUser || !currentUser.username) {
@@ -274,35 +359,71 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- Event Listeners ---
-    DOMElements.createAlbumBtn.addEventListener('click', () => DOMElements.createAlbumFormContainer.style.display = 'block');
-    DOMElements.cancelCreateAlbumBtn.addEventListener('click', () => DOMElements.createAlbumFormContainer.style.display = 'none');
-    DOMElements.createAlbumForm.addEventListener('submit', async e => {
-        e.preventDefault();
-        const token = localStorage.getItem('authToken');
-        const albumName = DOMElements.newAlbumNameInput.value;
-        await fetch('/api/create-album', { method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`}, body: JSON.stringify({name: albumName}) });
-        DOMElements.createAlbumFormContainer.style.display = 'none';
-        fetchUserAlbums();
-    });
+    if (DOMElements.createAlbumBtn) {
+        DOMElements.createAlbumBtn.addEventListener('click', () => DOMElements.createAlbumFormContainer.style.display = 'block');
+    }
+    if (DOMElements.cancelCreateAlbumBtn) {
+        DOMElements.cancelCreateAlbumBtn.addEventListener('click', () => DOMElements.createAlbumFormContainer.style.display = 'none');
+    }
+    if (DOMElements.createAlbumForm) {
+        DOMElements.createAlbumForm.addEventListener('submit', async e => {
+            e.preventDefault();
+            const token = localStorage.getItem('authToken');
+            const albumName = DOMElements.newAlbumNameInput.value;
+            if (!albumName) {
+                showToast("Album name cannot be empty.", "error");
+                return;
+            }
+            await fetch('/api/create-album', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    name: albumName
+                })
+            });
+            DOMElements.createAlbumFormContainer.style.display = 'none';
+            DOMElements.createAlbumForm.reset();
+            fetchUserAlbums();
+        });
+    }
+
+    if (DOMElements.albumGrid) {
+        DOMElements.albumGrid.addEventListener('click', e => {
+            const shareButton = e.target.closest('.share-album-btn');
+            if (shareButton) {
+                e.stopPropagation();
+                handleShareAlbumClick(shareButton.dataset.albumId);
+            }
+        });
+    }
+
+    if (DOMElements.closeShareModalBtn) {
+        DOMElements.closeShareModalBtn.addEventListener('click', () => DOMElements.shareModal.style.display = 'none');
+    }
+    if (DOMElements.copyShareLinkBtn) {
+        DOMElements.copyShareLinkBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(DOMElements.shareLinkInput.value).then(() => showToast("Link copied!", "success"));
+        });
+    }
     
-    DOMElements.albumGrid.addEventListener('click', e => {
-        const shareButton = e.target.closest('.share-album-btn');
-        if (shareButton) {
-            e.stopPropagation();
-            handleShareAlbumClick(shareButton.dataset.albumId);
-        }
+    if (DOMElements.shareModal) {
+        DOMElements.shareModal.addEventListener('click', (e) => {
+            if (e.target === DOMElements.shareModal) {
+                DOMElements.shareModal.style.display = 'none';
+            }
+        });
+    }
+
+    [DOMElements.logoutBtnDropdown, DOMElements.logoutBtnNavMobile].forEach(btn => {
+        if (btn) btn.addEventListener('click', handleLogout);
     });
 
-    DOMElements.closeShareModalBtn.addEventListener('click', () => DOMElements.shareModal.style.display = 'none');
-    DOMElements.copyShareLinkBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(DOMElements.shareLinkInput.value).then(() => showToast("Link copied!", "success"));
-    });
-    
-    [DOMElements.logoutBtnDropdown, DOMElements.logoutBtnNavMobile].forEach(btn => btn.addEventListener('click', handleLogout));
-
-    // --- Initialize Page ---
     async function initializePage() {
         if (await checkLoginStatus()) {
+            switchView('manage-albums-view');
             fetchUserAlbums();
         }
     }

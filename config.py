@@ -13,6 +13,6 @@ R2_CONFIG = {
 JWT_SECRET = "pixelperfect-secure-albums-secret-key-2023"
 
 # ML API Base URL
-ML_API_BASE_URL = "https://facerecognition-app-47922655580.asia-south1.run.app/" # Use localhost for local testing
+ML_API_BASE_URL = "https://facerecognitionphotography-app-200111791636.asia-south1.run.app/" # Use localhost for local testing
 # Replace with your deployed API URL for production:
 # ML_API_BASE_URL = "https://your-fastapi-app-url.com"
