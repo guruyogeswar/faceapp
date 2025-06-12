@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup - Aadishree</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .error-message { color: red; text-align: center; margin-top: 10px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="forms-wrapper">
+        <div class="forms-container">
+        <div class="form-container" id="signup-form">
+            <h1>Sign Up</h1>
+            <p>Create your account to find your photos</p>
+            
+            <div id="signup-error-message" class="error-message" style="display: none;"></div>
+
+            <form id="actual-signup-form" enctype="multipart/form-data">
+                <div class="input-group">
+                    <label for="signup-name">Username</label>
+                    <input type="text" id="signup-name" name="username" placeholder="Choose a username" required>
+                </div>
+                <div class="input-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" name="password" placeholder="Create a password" required>
+                </div>
+                <div class="input-group">
+                    <label for="ref-photo">Your Photo for Recognition</label>
+                    <input type="file" id="ref-photo" name="ref_photo" accept="image/*" required style="padding: 10px; background-color: #333; color:#fff; border-radius: 8px;">
+                </div>
+                <p style="font-size: 0.75rem; color: #ccc; text-align: center; margin-top: -10px; margin-bottom: 15px;">
+                    Upload a clear, forward-facing photo of yourself.
+                </p>
+                <button type="submit" id="signup-btn" class="btn-sign">Create Account</button>
+            </form>
+            <div class="switch-form">
+                Already have an account? <a href="login.html">Log in</a>
+            </div>
+        </div>
+    </div>
+    </div>
+    <footer class="logsign"><br></footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const signupForm = document.getElementById('actual-signup-form');
+            const signupButton = document.getElementById('signup-btn');
+            const errorMessageDiv = document.getElementById('signup-error-message');
+
+            signupForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                errorMessageDiv.style.display = 'none';
+
+                const formData = new FormData(signupForm);
+
+                if (!formData.get('username') || !formData.get('password') || !formData.get('ref_photo').size) {
+                    errorMessageDiv.textContent = 'Please fill out all fields and select a photo.';
+                    errorMessageDiv.style.display = 'block';
+                    return;
+                }
+
+                try {
+                    signupButton.disabled = true;
+                    signupButton.textContent = 'Creating Account...';
+
+                    const response = await fetch('/api/auth/signup', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(result.error || 'Signup failed.');
+                    }
+
+                    // On success, redirect to login page
+                    window.location.href = 'login.html';
+
+                } catch (error) {
+                    errorMessageDiv.textContent = error.message;
+                    errorMessageDiv.style.display = 'block';
+                } finally {
+                    signupButton.disabled = false;
+                    signupButton.textContent = 'Create Account';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+    "users": {
+        "demo": {
+            "password": "demo123",
+            "role": "photographer",
+            "ref_photo_path": null
+        },
+        "yogi": {
+            "password": "yogi123",
+            "role": "attendee",
+            "ref_photo_path": "user_profiles/yogi/32100c13-847a-459a-a7ee-d6bc6fb03535_PERSON1_8.jpg"
+        }
+    },
+    "albums": {}
+}

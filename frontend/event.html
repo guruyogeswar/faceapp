@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Photos</title>
+    <link rel="stylesheet" href="css/style.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-light-color">
+
+    <header class="header-main">
+        <div class="container header-container">
+            <nav class="header-nav">
+                <div class="header-logo">
+                    <a href="index.html">
+                        <img src="uploads/Screenshot%202025-06-03%20110359.png" alt="Logo" />
+                    </a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div id="loading-state" class="text-center py-20">
+            <div class="spinner"></div>
+            <p class="mt-4 text-gray-600">Loading Event...</p>
+        </div>
+
+        <div id="guest-prompt" style="display: none;" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg text-center">
+            <h1 id="event-title-guest" class="text-2xl font-bold text-dark-color mb-2">Welcome to the Event</h1>
+            <p class="text-gray-500 mb-6">Please sign in or create an account to find and view your photos.</p>
+            <div class="space-y-4">
+                <a href="login.html" id="login-btn-guest" class="btn btn-primary btn-block">Log In</a>
+                <a href="signin.html" id="signup-btn-guest" class="btn btn-outline btn-block">Sign Up</a>
+            </div>
+            <p class="text-xs text-gray-400 mt-4">You'll be asked to upload a photo of yourself during sign up so we can find you in the album!</p>
+        </div>
+
+        <div id="event-gallery" style="display: none;">
+            <h1 id="event-title-main" class="text-3xl font-bold text-dark-color mb-6"></h1>
+            
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <button id="my-photos-tab" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-primary border-primary">
+                        My Photos
+                    </button>
+                    <button id="all-photos-tab" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent">
+                        All Event Photos
+                    </button>
+                </nav>
+            </div>
+
+            <div>
+                <div id="my-photos-view">
+                    <p class="text-center text-gray-600 py-10">Searching for your photos...</p>
+                </div>
+                <div id="all-photos-view" style="display: none;">
+                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                     </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+    
+    <footer class="bg-dark-color text-white mt-16">
+        <div class="container mx-auto px-4 py-8 text-center">
+            <p>&copy; <span id="currentYear"></span> Aadishree. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/event.js"></script>
+    <script>
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
